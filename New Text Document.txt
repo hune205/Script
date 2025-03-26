@@ -1,0 +1,98 @@
+local Library = {}
+
+function Library:CreateGUI(Identifier)
+    local ScreenGui = Instance.new("ScreenGui")
+    local Frame = Instance.new("Frame")
+    local UICorner = Instance.new("UICorner")
+    local Title = Instance.new("TextLabel")
+    local KeyBox = Instance.new("TextBox")
+    local VerifyButton = Instance.new("TextButton")
+    local GetKeyButton = Instance.new("TextButton")
+    local StatusLabel = Instance.new("TextLabel")
+    
+    -- UI Properties
+    ScreenGui.Parent = game.CoreGui
+    Frame.Parent = ScreenGui
+    Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    Frame.Position = UDim2.new(0.5, -100, 0.4, 0)
+    Frame.Size = UDim2.new(0, 250, 0, 150)
+    
+    UICorner.Parent = Frame
+    
+    Title.Parent = Frame
+    Title.Text = "Key System"
+    Title.Size = UDim2.new(1, 0, 0, 30)
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.BackgroundTransparency = 1
+    
+    KeyBox.Parent = Frame
+    KeyBox.PlaceholderText = "Enter Key Here..."
+    KeyBox.Size = UDim2.new(0.9, 0, 0, 30)
+    KeyBox.Position = UDim2.new(0.05, 0, 0.3, 0)
+    KeyBox.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    KeyBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    
+    VerifyButton.Parent = Frame
+    VerifyButton.Text = "Verify Key"
+    VerifyButton.Size = UDim2.new(0.9, 0, 0, 30)
+    VerifyButton.Position = UDim2.new(0.05, 0, 0.6, 0)
+    VerifyButton.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+    
+    GetKeyButton.Parent = Frame
+    GetKeyButton.Text = "Get Key"
+    GetKeyButton.Size = UDim2.new(0.9, 0, 0, 30)
+    GetKeyButton.Position = UDim2.new(0.05, 0, 0.8, 0)
+    GetKeyButton.BackgroundColor3 = Color3.fromRGB(255, 120, 0)
+    
+    StatusLabel.Parent = Frame
+    StatusLabel.Text = ""
+    StatusLabel.Size = UDim2.new(1, 0, 0, 20)
+    StatusLabel.Position = UDim2.new(0, 0, 1.1, 0)
+    StatusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+    StatusLabel.BackgroundTransparency = 1
+    
+    -- API Xác Thực Key
+    local function ValidateKey()
+        local UserKey = KeyBox.Text
+        local HttpService = game:GetService("HttpService")
+        local UserID = game.Players.LocalPlayer.UserId
+        local Url = "https://pandadevelopment.net/v2_validation?key=" .. UserKey .. "&service=" .. Identifier .. "&hwid=" .. UserID
+        
+        local Response = request({
+            Url = Url,
+            Method = "GET"
+        })
+        
+        if Response.Success then
+            local Data = HttpService:JSONDecode(Response.Body)
+            if Data["V2_Authentication"] == "success" then
+                StatusLabel.Text = "✅ Key hợp lệ!"
+                StatusLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+                wait(1)
+                ScreenGui:Destroy() -- Xóa UI nếu key hợp lệ
+            else
+                StatusLabel.Text = "❌ Key không hợp lệ!"
+                StatusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+            end
+        else
+            StatusLabel.Text = "⚠️ Lỗi kết nối API!"
+        end
+    end
+    
+    -- Sự kiện khi nhấn nút Verify
+    VerifyButton.MouseButton1Click:Connect(function()
+        ValidateKey()
+    end)
+    
+    -- Nút Get Key
+    GetKeyButton.MouseButton1Click:Connect(function()
+        local GetKeyLink = "https://pandadevelopment.net/getkey?service=".. Identifier .."&hwid=".. game.Players.LocalPlayer.UserId
+        setclipboard(GetKeyLink) -- Sao chép link vào clipboard
+        StatusLabel.Text = "📋 Link Get Key đã sao chép!"
+        StatusLabel.TextColor3 = Color3.fromRGB(0, 255, 255)
+    end)
+    
+    return ScreenGui
+end
+
+return Library
